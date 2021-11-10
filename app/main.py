@@ -7,6 +7,8 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette import status
 from starlette.responses import FileResponse
 
+from app.modules import zip
+
 app = FastAPI()
 
 security = HTTPBasic()
@@ -39,8 +41,11 @@ async def create_upload_files(flightName: str, uploadedFiles: List[UploadFile] =
         file_location = f"{directory}/{uploadedFile.filename}"
         buffer = uploadedFile.file.read()
 
-        with open(file_location, "wb+") as file_object:
-            file_object.write(buffer)
+        if uploadedFile.content_type == "application/zip":
+            zip.unzip_file(directory, buffer)
+        else:
+            with open(file_location, "wb+") as file_object:
+                file_object.write(buffer)
 
     return {
         "message": "Files uploaded successfully"
