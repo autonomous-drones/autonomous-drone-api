@@ -16,6 +16,7 @@ security = HTTPBasic()
 save_path_json = 'uploads/json/'
 save_path_img = 'uploads/img/'
 
+
 def authorize(credentials: HTTPBasicCredentials = Depends(security)):
     correct_username = secrets.compare_digest(credentials.username, "drone")
     correct_password = secrets.compare_digest(credentials.password, "drone")
@@ -27,9 +28,11 @@ def authorize(credentials: HTTPBasicCredentials = Depends(security)):
         )
     return credentials.username
 
+
 @app.get("/")
 async def root():
     return {"message": "Autonomous Drone API"}
+
 
 @app.post("/upload/")
 async def create_upload_files(flightName: str, uploadedFiles: List[UploadFile] = File(...), credentials: HTTPBasicCredentials = Depends(authorize)):
@@ -51,18 +54,20 @@ async def create_upload_files(flightName: str, uploadedFiles: List[UploadFile] =
         "message": "Files uploaded successfully"
     }
 
+
 @app.get("/retrieve/json/")
 async def read_items(flightName: str, recordId: int, credentials: HTTPBasicCredentials = Depends(authorize)):
     return FileResponse(
         path=f"uploads/json/{flightName}/record_{recordId}.json",
         filename=f"record_{recordId}.json",
         media_type='text/json'
-        )
+    )
+
 
 @app.get("/retrieve/img")
 async def read_items(flightName: str, imageId: int, credentials: HTTPBasicCredentials = Depends(authorize)):
-     return FileResponse(
+    return FileResponse(
         path=f"uploads/img/{flightName}/{imageId}_cam-image.jpg",
         filename=f"{imageId}_cam-image.jpg",
-         media_type='image/jpeg'
-        )
+        media_type='image/jpeg'
+    )
