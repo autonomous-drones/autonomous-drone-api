@@ -1,6 +1,7 @@
 import os
 import secrets
 
+from typing import List
 from fastapi import FastAPI, File, UploadFile, Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette import status
@@ -28,29 +29,21 @@ def authorize(credentials: HTTPBasicCredentials = Depends(security)):
 async def root():
     return {"message": "Autonomous Drone API"}
 
-@app.post("/upload/json/")
-async def create_upload_file(flightName: str, uploadedFile: UploadFile = File(...), credentials: HTTPBasicCredentials = Depends(authorize)):
+@app.post("/upload/")
+async def create_upload_files(flightName: str, uploadedFiles: List[UploadFile] = File(...), credentials: HTTPBasicCredentials = Depends(authorize)):
+    for uploadedFile in uploadedFiles:
+        if (os.path.isdir(f"{save_path_json}{flightName}") == False):
+            os.mkdir(f"{save_path_json}{flightName}")
 
-    if(os.path.isdir(f"{save_path_json}{flightName}") == False):
-         os.mkdir(f"{save_path_json}{flightName}")
+        directory = f"{save_path_json}{flightName}/"
+        file_location = f"{directory}/{uploadedFile.filename}"
+        buffer = uploadedFile.file.read()
 
-    file_location = f"{save_path_json}{flightName}/{uploadedFile.filename}"
-    with open(file_location, "wb+") as file_object:
-        file_object.write(uploadedFile.file.read())
+        with open(file_location, "wb+") as file_object:
+            file_object.write(buffer)
+
     return {
-        "message": f"File '{uploadedFile.filename}' was successfully saved in '{file_location}'"
-    }
-
-@app.post("/upload/img/")
-async def create_upload_file(flightName: str, uploadedFile: UploadFile = File(...), credentials: HTTPBasicCredentials = Depends(authorize)):
-    if (os.path.isdir(f"{save_path_img}{flightName}") == False):
-        os.mkdir(f"{save_path_img}{flightName}")
-
-    file_location = f"{save_path_json}{flightName}/{uploadedFile.filename}"
-    with open(file_location, "wb+") as file_object:
-        file_object.write(uploadedFile.file.read())
-    return {
-         "message": f"File '{uploadedFile.filename}' was successfully saved in '{file_location}'"
+        "message": "Files uploaded successfully"
     }
 
 @app.get("/retrieve/json/")
