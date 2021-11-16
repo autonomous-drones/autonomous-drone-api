@@ -1,10 +1,12 @@
 import os
 import secrets
+import io
+import zipfile
 
 from fastapi import FastAPI, File, UploadFile, Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette import status
-from starlette.responses import FileResponse
+from starlette.responses import FileResponse, Response
 
 app = FastAPI()
 
@@ -12,6 +14,7 @@ security = HTTPBasic()
 
 save_path_json = 'uploads/json/'
 save_path_img = 'uploads/img/'
+
 
 def authorize(credentials: HTTPBasicCredentials = Depends(security)):
     correct_username = secrets.compare_digest(credentials.username, "drone")
@@ -24,15 +27,37 @@ def authorize(credentials: HTTPBasicCredentials = Depends(security)):
         )
     return credentials.username
 
+
+def zipfiles(filenames):
+    zip_filename = "archive.zip"
+
+    s = io.BytesIO()
+    zf = zipfile.ZipFile(s, "w")
+
+    for fpath in filenames:
+        fdir, fname = os.path.split(fpath)
+
+        zf.write(fpath, fname)
+
+    zf.close()
+
+    resp = Response(s.getvalue(), media_type="application/x-zip-compressed", headers={
+        'Content-Disposition': f'attachment;filename={zip_filename}'
+    })
+
+    return resp
+
+
 @app.get("/")
 async def root():
     return {"message": "Autonomous Drone API"}
 
-@app.post("/upload/json/")
-async def create_upload_file(flightName: str, uploadedFile: UploadFile = File(...), credentials: HTTPBasicCredentials = Depends(authorize)):
 
-    if(os.path.isdir(f"{save_path_json}{flightName}") == False):
-         os.mkdir(f"{save_path_json}{flightName}")
+@app.post("/upload/json/")
+async def create_upload_file(flightName: str, uploadedFile: UploadFile = File(...),
+                             credentials: HTTPBasicCredentials = Depends(authorize)):
+    if (os.path.isdir(f"{save_path_json}{flightName}") == False):
+        os.mkdir(f"{save_path_json}{flightName}")
 
     file_location = f"{save_path_json}{flightName}/{uploadedFile.filename}"
     with open(file_location, "wb+") as file_object:
@@ -41,8 +66,10 @@ async def create_upload_file(flightName: str, uploadedFile: UploadFile = File(..
         "message": f"File '{uploadedFile.filename}' was successfully saved in '{file_location}'"
     }
 
+
 @app.post("/upload/img/")
-async def create_upload_file(flightName: str, uploadedFile: UploadFile = File(...), credentials: HTTPBasicCredentials = Depends(authorize)):
+async def create_upload_file(flightName: str, uploadedFile: UploadFile = File(...),
+                             credentials: HTTPBasicCredentials = Depends(authorize)):
     if (os.path.isdir(f"{save_path_img}{flightName}") == False):
         os.mkdir(f"{save_path_img}{flightName}")
 
@@ -50,8 +77,9 @@ async def create_upload_file(flightName: str, uploadedFile: UploadFile = File(..
     with open(file_location, "wb+") as file_object:
         file_object.write(uploadedFile.file.read())
     return {
-         "message": f"File '{uploadedFile.filename}' was successfully saved in '{file_location}'"
+        "message": f"File '{uploadedFile.filename}' was successfully saved in '{file_location}'"
     }
+
 
 @app.get("/retrieve/json/")
 async def read_items(flightName: str, recordId: int, credentials: HTTPBasicCredentials = Depends(authorize)):
@@ -59,12 +87,13 @@ async def read_items(flightName: str, recordId: int, credentials: HTTPBasicCrede
         path=f"uploads/json/{flightName}/record_{recordId}.json",
         filename=f"record_{recordId}.json",
         media_type='text/json'
-        )
+    )
+
 
 @app.get("/retrieve/img")
 async def read_items(flightName: str, imageId: int, credentials: HTTPBasicCredentials = Depends(authorize)):
-     return FileResponse(
+    return FileResponse(
         path=f"uploads/img/{flightName}/{imageId}_cam-image.jpg",
         filename=f"{imageId}_cam-image.jpg",
-         media_type='image/jpeg'
-        )
+        media_type='image/jpeg'
+    )
