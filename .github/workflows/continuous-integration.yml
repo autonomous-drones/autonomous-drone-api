@@ -1,0 +1,37 @@
+name: Continuous integration
+on: [ push, pull_request ]
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+  build:
+    name: Build
+    needs: [ setup ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Compile project
+      run: python -m compileall ./app -q     
+  test:
+    name: Test
+    needs: [ setup, build ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Execute unittest module
+      run: python -m unittest
