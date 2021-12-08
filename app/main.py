@@ -1,23 +1,20 @@
 import os
 import secrets
-import io
-import zipfile
 
 from typing import List
 from fastapi import FastAPI, File, UploadFile, Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette import status
-from starlette.responses import FileResponse, Response
-from zipfile import ZipFile
+from starlette.responses import FileResponse
 
 from app.modules import zip
+from app.modules import file_system
 
 app = FastAPI()
-
 security = HTTPBasic()
 
-save_path_json = 'uploads/json/'
-save_path_img = 'uploads/img/'
+upload_directory = 'uploads'
+compressed_directory = 'compressed'
 
 
 def authorize(credentials: HTTPBasicCredentials = Depends(security)):
@@ -38,12 +35,14 @@ async def root():
 
 
 @app.post("/upload/")
-async def create_upload_files(flightName: str, uploadedFiles: List[UploadFile] = File(...), credentials: HTTPBasicCredentials = Depends(authorize)):
+async def create_upload_files(flightName: str, uploadedFiles: List[UploadFile] = File(...),
+                              credentials: HTTPBasicCredentials = Depends(authorize)):
     for uploadedFile in uploadedFiles:
-        if (os.path.isdir(f"{save_path_json}{flightName}") == False):
-            os.mkdir(f"{save_path_json}{flightName}")
+        directory = f"{upload_directory}/{flightName}"
 
-        directory = f"{save_path_json}{flightName}/"
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
+
         file_location = f"{directory}/{uploadedFile.filename}"
         buffer = uploadedFile.file.read()
 
@@ -53,25 +52,24 @@ async def create_upload_files(flightName: str, uploadedFiles: List[UploadFile] =
             with open(file_location, "wb+") as file_object:
                 file_object.write(buffer)
 
-    return {
-        "message": "Files uploaded successfully"
-    }
+    return {"message": "Files uploaded successfully"}
 
 
+@app.get("/retrieve/")
+async def read_retrieve_files(flightName: str, credentials: HTTPBasicCredentials = Depends(authorize)):
+    if not os.path.isdir(f"{upload_directory}/{flightName}"):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Flight not found with name {flightName}",
+        )
 
-@app.get("/retrieve/json/")
-async def read_items(flightName: str, recordId: int, credentials: HTTPBasicCredentials = Depends(authorize)):
+    output_file_path = f"{compressed_directory}/{flightName}.zip"
+
+    file_paths = file_system.get_file_paths(f"{upload_directory}/{flightName}/")
+    zip.zip_files(file_paths, output_file_path)
+
     return FileResponse(
-        path=f"uploads/json/{flightName}/record_{recordId}.json",
-        filename=f"record_{recordId}.json",
-        media_type='text/json'
-    )
-
-
-@app.get("/retrieve/img")
-async def read_items(flightName: str, imageId: int, credentials: HTTPBasicCredentials = Depends(authorize)):
-    return FileResponse(
-        path=f"uploads/img/{flightName}/{imageId}_cam-image.jpg",
-        filename=f"{imageId}_cam-image.jpg",
-        media_type='image/jpeg'
+        path=output_file_path,
+        filename=os.path.basename(output_file_path),
+        media_type="application/zip"
     )
