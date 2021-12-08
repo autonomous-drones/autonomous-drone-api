@@ -1,16 +1,13 @@
 import os
 from typing import List
 
-from fastapi import File, UploadFile, Depends
+from fastapi import APIRouter, File, UploadFile, Depends
 from fastapi.security import HTTPBasicCredentials
 from starlette.responses import FileResponse
 
-import app.modules.auth as auth
 import app.config as c
-import app.main as main
-from app.modules import zip
-
-from fastapi import APIRouter
+import app.modules.auth as auth
+import app.modules.zip as zip
 
 router = APIRouter()
 

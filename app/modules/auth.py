@@ -5,7 +5,6 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette import status
 
 app = FastAPI()
-
 security = HTTPBasic()
 
 
