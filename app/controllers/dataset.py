@@ -1,18 +1,17 @@
 import os
 from typing import List
 
+from fastapi import APIRouter
 from fastapi import File, UploadFile, Depends
 from fastapi.security import HTTPBasicCredentials
 from starlette.responses import FileResponse
 
-import app.modules.auth as auth
 import app.config as c
-import app.main as main
+import app.modules.auth as auth
 from app.modules import zip
 
-from fastapi import APIRouter
-
 router = APIRouter()
+
 
 @router.post("/upload/")
 async def create_upload_files(flightName: str, uploadedFiles: List[UploadFile] = File(...),

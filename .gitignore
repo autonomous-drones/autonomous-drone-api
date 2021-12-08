@@ -39,9 +39,9 @@
 # .idea/artifacts
 # .idea/compiler.xml
 # .idea/jarRepositories.xml
-# .idea/modules.xml
+# .idea/models.xml
 # .idea/*.iml
-# .idea/modules
+# .idea/models
 # *.iml
 # *.ipr
 
@@ -235,3 +235,4 @@ dmypy.json
 cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm+all
+/models/
