@@ -1,0 +1,4 @@
+FROM tensorflow/tensorflow
+WORKDIR /code
+COPY ./logs /code/logs
+CMD ["tensorboard", "--logdir", "logs/", "--bind_all", "--port", "6006"]

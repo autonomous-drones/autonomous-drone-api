@@ -8,17 +8,10 @@ services:
     ports:
       - "80:80"
     restart: unless-stopped
-#  db:
-#    container_name: api_db
-#    build:
-#      context: .
-#      dockerfile: Dockerfile.db
-#    environment:
-#      - PUID=1000
-#      - PGID=1000
-#    volumes:
-#      - /home/drone/mongodb/database:/data/db
-#    ports:
-#      - 27017:27017
-#    restart: unless-stopped
-
+  tensorboard:
+    container_name: tensorboard
+    build:
+      context: .
+      dockerfile: Dockerfile.board
+    ports:
+      - "6006:6006"
