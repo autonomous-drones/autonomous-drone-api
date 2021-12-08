@@ -7,6 +7,7 @@ from fastapi import FastAPI, File, UploadFile, Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette import status
 from starlette.responses import FileResponse, Response
+from zipfile import ZipFile
 
 app = FastAPI()
 
@@ -26,6 +27,24 @@ def authorize(credentials: HTTPBasicCredentials = Depends(security)):
             headers={"WWW-Authenticate": "Basic"},
         )
     return credentials.username
+
+
+def get_filepaths(save_path):
+        file_path_collection = []
+
+        for root, directories, files in os.walk(save_path):
+            for filename in files:
+                file_path = os.path.join(save_path, filename)
+                file_path_collection.append(file_path)
+
+            return file_path_collection
+
+
+def zipFiles(save_path):
+    file_paths = get_filepaths(save_path)
+    with ZipFile("{flightName}.zip", 'w') as zip:
+        for file in file_paths:
+            zip.write(file)
 
 
 @app.get("/")
@@ -79,33 +98,11 @@ async def read_items(flightName: str, imageId: int, credentials: HTTPBasicCreden
     )
 
 
-def zipfiles(filenames):
-    zip_filename = "archive.zip"
-
-    s = io.BytesIO()
-    zf = zipfile.ZipFile(s, "w")
-
-    for fpath in filenames:
-        # Calculate path for file in zip
-        fdir, fname = os.path.split(fpath)
-
-        # Add file, at correct path
-        zf.write(fpath, fname)
-
-    # Must close zip for all contents to be written
-    zf.close()
-
-    # Grab ZIP file from in-memory, make response with correct MIME-type
-    resp = Response(s.getvalue(), media_type="application/x-zip-compressed", headers={
-        'Content-Disposition': f'attachment;filename={zip_filename}'
-    })
-
-    return resp
+@app.get("retrieve/img/zip")
+async def read_items(flightName: str, credentials: HTTPBasicCredentials = Depends(authorize)):
+    return zipFiles(save_path_img)
 
 
-@app.get("/image_from_id/")
-async def image_from_id(image_id: int):
-
-    # Get image from the database
-    img = ...
-    return zipfiles(img)
+@app.get("retrieve/json/zip")
+async def read_items(flightName: str, credentials: HTTPBasicCredentials = Depends(authorize)):
+    return zipFiles(save_path_json)
