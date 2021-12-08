@@ -2,6 +2,6 @@
 credentials_username = 'drone'
 credentials_password = 'drone123'
 
-# Dataset upload location
-save_path_json = 'uploads/json/'
-save_path_img = 'uploads/img/'
+# Dataset directories
+upload_directory = 'storage/uploads/'
+compressed_directory = 'storage/compressed/'
