@@ -3,4 +3,4 @@ WORKDIR /code
 COPY ./requirements_ml.txt /code/requirements_ml.txt
 RUN pip install --no-cache-dir --upgrade -r /code/requirements_ml.txt
 COPY ./logs /code/logs
-CMD ["tensorboard", "--logdir", "/code/logs", "--port", "4004"]
+CMD ["tensorboard", "--logdir", "/code/logs", "--port", "6006"]
