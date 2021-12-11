@@ -31,11 +31,10 @@ jobs:
     needs: [ setup, build ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-    
+    - uses: actions/checkout@v2    
     - name: Analysing the code with pylint
       run: |
+        python -m pylint
         pylint --fail-under=6.0 -rn app $(find . -name "*.py" | xargs)
   test:
     name: Test
