@@ -1,4 +1,5 @@
 # app/main.py
+"""App main"""
 from fastapi import FastAPI
 from app.api.api import router
 

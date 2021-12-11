@@ -23,9 +23,19 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    
+
     - name: Compile project
-      run: python -m compileall ./app -q     
+      run: python -m compileall ./app -q
+  lint:
+    name: Pylint
+    needs: [ setup, build ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2    
+    - name: Analysing the code with pylint
+      run: |
+        pip install -r requirements.txt
+        pylint --fail-under=6.0 -rn app $(find . -name "*.py" | xargs)
   test:
     name: Test
     needs: [ setup, build ]

@@ -1,7 +1,8 @@
+"""GLOBAL CONFIG"""
 # Credentials for HTTPBasic authentication
-credentials_username = 'drone'
-credentials_password = 'drone123'
+CREDENTIALS_USERNAME = 'drone'
+CREDENTIALS_PASSWORD = 'drone123'
 
 # Dataset directories
-upload_directory = 'storage/uploads/'
-compressed_directory = 'storage/compressed/'
+UPLOAD_DIR = 'storage/uploads/'
+COMPRESSED_DIR = 'storage/compressed/'
