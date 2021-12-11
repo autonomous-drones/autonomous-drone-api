@@ -1,33 +1,33 @@
+"""Dataset Controller"""
 import os
 from typing import List
-
 from fastapi import APIRouter, HTTPException, File, UploadFile, Depends
 from fastapi.security import HTTPBasicCredentials
 from starlette import status
 from starlette.responses import FileResponse
-
 import app.config as c
-import app.modules.auth as auth
-import app.modules.zip as zip
-import app.modules.file_system as file_system
+from app.modules import auth, zipper, file_system
+
 
 router = APIRouter()
 
 
 @router.post("/upload/")
-async def create_upload_files(flightName: str, uploadedFiles: List[UploadFile] = File(...),
+async def create_upload_files(flight_name: str, uploaded_files: List[UploadFile] = File(...),
                               credentials: HTTPBasicCredentials = Depends(auth.authorize)):
-    for uploadedFile in uploadedFiles:
-        directory = f"{c.upload_directory}/{flightName}"
+    """Multi file upload"""
+    for input_file in uploaded_files:
+        directory = f"{c.UPLOAD_DIR}/{flight_name}"
 
         if not os.path.isdir(directory):
             os.mkdir(directory)
 
-        file_location = f"{directory}/{uploadedFile.filename}"
-        buffer = uploadedFile.file.read()
+        file_location = f"{directory}/{input_file.filename}"
+        buffer = input_file.file.read()
 
-        if uploadedFile.content_type == "application/zip" or uploadedFile.content_type == "application/x-zip-compressed":
-            zip.unzip_file(directory, buffer)
+        if("application/zip" and "application/x-zip-compressed") in input_file.content_type:
+
+            zipper.unzip_file(directory, buffer)
         else:
             with open(file_location, "wb+") as file_object:
                 file_object.write(buffer)
@@ -36,17 +36,21 @@ async def create_upload_files(flightName: str, uploadedFiles: List[UploadFile] =
 
 
 @router.get("/retrieve/")
-async def read_retrieve_files(flightName: str, credentials: HTTPBasicCredentials = Depends(auth.authorize)):
-    if not os.path.isdir(f"{c.upload_directory}/{flightName}"):
+async def read_retrieve_files(
+        flight_name: str,
+        credentials: HTTPBasicCredentials = Depends(auth.authorize)
+):
+    """Retrieve multiple files as ZIP file"""
+    if not os.path.isdir(f"{c.UPLOAD_DIR}/{flight_name}"):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Flight not found with name {flightName}",
+            detail=f"Flight not found with name {flight_name}",
         )
 
-    output_file_path = f"{c.compressed_directory}/{flightName}.zip"
+    output_file_path = f"{c.COMPRESSED_DIR}/{flight_name}.zip"
 
-    file_paths = file_system.get_file_paths(f"{c.upload_directory}/{flightName}/")
-    zip.zip_files(file_paths, output_file_path)
+    file_paths = file_system.get_file_paths(f"{c.UPLOAD_DIR}/{flight_name}/")
+    zipper.zip_files(file_paths, output_file_path)
 
     return FileResponse(
         path=output_file_path,

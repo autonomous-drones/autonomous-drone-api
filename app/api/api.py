@@ -1,4 +1,5 @@
 # app/api/api.py
+"""Adds the controllers to the router"""
 from fastapi import APIRouter
 from app.controllers import dataset
 
