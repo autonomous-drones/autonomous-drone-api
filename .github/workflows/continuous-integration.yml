@@ -34,7 +34,7 @@ jobs:
     - uses: actions/checkout@v2    
     - name: Analysing the code with pylint
       run: |
-        python -m pylint
+        pip install -r requirements.txt
         pylint --fail-under=6.0 -rn app $(find . -name "*.py" | xargs)
   test:
     name: Test
