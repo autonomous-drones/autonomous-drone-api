@@ -10,4 +10,5 @@ six==1.16.0
 sniffio==1.2.0
 starlette==0.16.0
 typing-extensions==3.10.0.2
+pylint==2.12.2
 uvicorn==0.15.0
